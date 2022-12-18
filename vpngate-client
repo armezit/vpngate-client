@@ -16,7 +16,9 @@ import time
 import urllib.request
 
 # The URL for the VPN list
-VPN_LIST_URL = "https://www.vpngate.net/api/iphone/"
+#VPN_LIST_URL = "https://www.vpngate.net/api/iphone/"
+#VPN_LIST_URL = "http://5.181.235.14:29916/api/iphone/"
+VPN_LIST_URL = "http://78.142.193.246:33304/api/iphone/"
 SPEED_TEST_URL = "https://cachefly.cachefly.net/10mb.test"
 
 logger = logging.getLogger()
@@ -450,11 +452,19 @@ class VPNList:
     def load_vpns(self):
         """Loads the VPN list from vpngate.net and parses then to |self.vpns|.
         """
-        self.log.info("Loading VPN list from %s", self.args.url)
-
         # Read the data
-        req = urllib.request.urlopen(self.args.url)
-        data = io.TextIOWrapper(req, encoding='utf8')
+        if not os.path.isfile(self.args.url):
+            self.log.info("Loading VPN list from %s", self.args.url)
+            if self.args.proxy:
+                print("Using HTTP proxy %s" % self.args.proxy)
+                proxy_handler = urllib.request.ProxyHandler({'http': self.args.proxy})
+                opener = urllib.request.build_opener(proxy_handler)
+                urllib.request.install_opener(opener)
+            req = urllib.request.urlopen(self.args.url)
+            data = io.TextIOWrapper(req, encoding='utf8')
+        else:
+            self.log.info("Loading VPN list from file %s", self.args.url)
+            data = open(self.args.url, "r", encoding="utf-8")
 
         # The first and last lines start with an asterix; ignore them
         rows = filter(lambda r: not r.startswith("*"), data)
@@ -573,8 +583,10 @@ def parse_args():
                    help="When probing, how long to wait for " +
                         "connection until marking the VPN as unavailable " +
                         "(milliseconds)")
+    p.add_argument("--proxy", action="store",
+                   help="HTTP Proxy url")
     p.add_argument("--url", action="store", default=VPN_LIST_URL,
-                   help="URL of the VPN list (csv)")
+                   help="URL of the VPN list (csv) or Filepath of the VPN list (prefetched CSV file)")
     p.add_argument("--us", action="store_true",
                    help="Adds United States to the list of possible " +
                         "countries. Shorthand or --country US")

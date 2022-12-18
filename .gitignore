@@ -3,6 +3,7 @@
 .pybuild
 __pycache__
 build
+.idea/
 
 # https://github.com/phusion/debian-packaging-for-the-modern-developer/blob/master/.gitignore
 debhelper-build-stamp
@@ -20,3 +21,4 @@ debhelper-build-stamp
 debian/hello
 debian/files
 debian/vpngate-client/
+env/
